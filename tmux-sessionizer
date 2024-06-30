@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# finding every DIRECTORY (type d) that is no less and no more than 1 deep from ~, ~/Coding and passing its output to fzf (which will then pass it to std out)
+session=$(find ~ ~/Coding -mindepth 1 -maxdepth 1 -type d | fzf)
+
+# get the basename from the path, replace any . with a _ (because tmux can't have . in session names)
+session_name=$(basename "$session" | tr . _)
+
+if ! tmux has-session -t "$session_name" 2> /dev/null; then
+  tmux new-session -c "$session" -s "$session_name" -d
+fi
+
+# check if the command is being called inside of tmux (by checking if the $TMUX env variable is present.)
+if [[ -z  "$TMUX" ]]; then
+  tmux attach-session -t "$session_name"
+else
+  tmux switch-client -t "$session_name"
+fi
+
+
